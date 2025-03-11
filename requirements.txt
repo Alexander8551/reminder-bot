@@ -1,0 +1,7 @@
+Flask
+Flask_SQLAlchemy
+mariadb
+marshmallow
+marshmallow-sqlalchemy
+pytest
+aiogram
