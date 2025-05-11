@@ -72,10 +72,37 @@ def test_update_reminder(test_client, create_user):
 def test_delete_reminder(test_client, create_user):
 	with test_client.application.app_context():
 		user = db.session.merge(create_user)
+
+		# Создаём напоминание от имени user
 		reminder = Reminder(user_id=user.id, chat_id=12345, title='Test Reminder')
 		db.session.add(reminder)
 		db.session.commit()
 
-		response = test_client.delete(f'/reminders/{reminder.id}')
+		# 1. Удаление с правильным user_id
+		response = test_client.delete(
+			f'/reminders/{reminder.id}?user_id={user.id}'
+		)
 		assert response.status_code == 204
 		assert db.session.get(Reminder, reminder.id) is None
+
+		# 2. Ошибка если user_id не передан
+		# Снова создаём напоминание
+		reminder2 = Reminder(user_id=user.id, chat_id=12345, title='Test Reminder 2')
+		db.session.add(reminder2)
+		db.session.commit()
+
+		response = test_client.delete(f'/reminders/{reminder2.id}')
+		assert response.status_code == 400
+		assert response.get_json()['error'] == "user_id is required"
+
+		# 3. Ошибка если user_id не совпадает
+		# Создаём "чужого" пользователя
+		other_user = User(telegram_id=987654321, username='otheruser')
+		db.session.add(other_user)
+		db.session.commit()
+
+		response = test_client.delete(
+			f'/reminders/{reminder2.id}?user_id={other_user.id}'
+		)
+		assert response.status_code == 403
+		assert "Вы не владелец" in response.get_json()['error']

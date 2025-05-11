@@ -4,6 +4,12 @@ from schemas import UserSchema
 
 bp = Blueprint('users_bp', __name__, url_prefix='/users')
 
+@bp.route('/', methods=['GET'])
+def get_users():
+    users = User.query.all()
+    schema = UserSchema(many=True)
+    return schema.dump(users)
+
 @bp.route('/', methods=['POST'])
 def create_user():
     data = request.get_json()

@@ -5,3 +5,6 @@ marshmallow
 marshmallow-sqlalchemy
 pytest
 aiogram
+openai
+python-dotenv
+aiohttp
